@@ -77,60 +77,76 @@ TOOLS = {
     "get_subscription_events": get_subscription_events,
 }
 
+# OpenAI function calling format
 TOOL_DEFINITIONS = [
     {
-        "name": "get_customer_summary",
-        "description": "Get basic profile and current subscription status for a customer. Returns name, pet info, plan, price, member since date, status, and total order count.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
-            },
-            "required": ["customer_id"]
+        "type": "function",
+        "function": {
+            "name": "get_customer_summary",
+            "description": "Get basic profile and current subscription status for a customer. Returns name, pet info, plan, price, member since date, status, and total order count.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
+                },
+                "required": ["customer_id"]
+            }
         }
     },
     {
-        "name": "get_order_history",
-        "description": "Get the full order history for a customer, including items, dates, delivery status, and any damage or delay notes.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
-            },
-            "required": ["customer_id"]
+        "type": "function",
+        "function": {
+            "name": "get_order_history",
+            "description": "Get the full order history for a customer, including items, dates, delivery status, and any damage or delay notes.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
+                },
+                "required": ["customer_id"]
+            }
         }
     },
     {
-        "name": "get_email_engagement",
-        "description": "Get email engagement history showing which emails (newsletters, promos) were opened and clicked.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
-            },
-            "required": ["customer_id"]
+        "type": "function",
+        "function": {
+            "name": "get_email_engagement",
+            "description": "Get email engagement history showing which emails (newsletters, promos) were opened and clicked.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
+                },
+                "required": ["customer_id"]
+            }
         }
     },
     {
-        "name": "get_support_tickets",
-        "description": "Get all support tickets and full message threads for a customer. Contains the actual customer and agent messages.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
-            },
-            "required": ["customer_id"]
+        "type": "function",
+        "function": {
+            "name": "get_support_tickets",
+            "description": "Get all support tickets and full message threads for a customer. Contains the actual customer and agent messages.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
+                },
+                "required": ["customer_id"]
+            }
         }
     },
     {
-        "name": "get_subscription_events",
-        "description": "Get subscription lifecycle events: subscribes, cancellations, resubscriptions, skips, pauses, and upcoming renewal dates.",
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
-            },
-            "required": ["customer_id"]
+        "type": "function",
+        "function": {
+            "name": "get_subscription_events",
+            "description": "Get subscription lifecycle events: subscribes, cancellations, resubscriptions, skips, pauses, and upcoming renewal dates.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "customer_id": {"type": "string", "description": "The customer ID (e.g. C001)"}
+                },
+                "required": ["customer_id"]
+            }
         }
     }
 ]

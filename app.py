@@ -73,12 +73,13 @@ with col1:
     st.subheader("Agent Investigation")
 
     if st.button("Investigate Customer", type="primary", use_container_width=True):
-        import anthropic
+        from openai import OpenAI
         from agent import SYSTEM_PROMPT
 
-        client = anthropic.Anthropic()
+        client = OpenAI()
 
         messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
             {
                 "role": "user",
                 "content": f"Investigate customer {selected_id} who has been flagged as at-risk of churning. Use the tools available to understand their situation, determine the likely cause, and decide on the appropriate action. Think step by step about what you're seeing."
@@ -91,40 +92,26 @@ with col1:
 
         with st.spinner("Agent is investigating..."):
             while True:
-                response = client.messages.create(
-                    model="claude-sonnet-4-20250514",
+                response = client.chat.completions.create(
+                    model="gpt-4o",
                     max_tokens=4096,
-                    system=SYSTEM_PROMPT,
                     tools=TOOL_DEFINITIONS,
                     messages=messages,
                 )
 
-                assistant_content = response.content
-                tool_use_blocks = []
-                text_blocks = []
-
-                for block in assistant_content:
-                    if block.type == "text":
-                        text_blocks.append(block.text)
-                    elif block.type == "tool_use":
-                        tool_use_blocks.append(block)
+                message = response.choices[0].message
 
                 # Show thinking
-                if text_blocks:
-                    thinking_text = "\n".join(text_blocks)
-                    if tool_use_blocks:
-                        # Still investigating — show as expandable
+                if message.content:
+                    if message.tool_calls:
                         step_counter += 1
                         with thinking_placeholder.container():
                             with st.expander(f"Reasoning step {step_counter}", expanded=True):
-                                st.markdown(thinking_text)
-                    else:
-                        # Final response
-                        pass
+                                st.markdown(message.content)
 
                 # If no tool calls, we're done
-                if not tool_use_blocks:
-                    final_text = "\n".join(text_blocks)
+                if not message.tool_calls:
+                    final_text = message.content or ""
 
                     # Parse decision for color-coded card
                     decision = None
@@ -146,13 +133,12 @@ with col1:
                         result_placeholder.markdown(final_text)
                     break
 
-                # Execute tool calls
-                messages.append({"role": "assistant", "content": assistant_content})
-                tool_results = []
+                # Append assistant message and execute tool calls
+                messages.append(message)
 
-                for tool_block in tool_use_blocks:
-                    tool_name = tool_block.name
-                    tool_input = tool_block.input
+                for tool_call in message.tool_calls:
+                    tool_name = tool_call.function.name
+                    tool_input = json.loads(tool_call.function.arguments)
 
                     # Show in trace
                     with trace_container:
@@ -164,18 +150,15 @@ with col1:
                     else:
                         result = f"Unknown tool: {tool_name}"
 
-                    # Show result preview in trace
+                    # Show result in trace
                     with trace_container:
-                        preview = result[:200] + "..." if len(result) > 200 else result
                         with st.expander("Result", expanded=False):
                             st.code(result, language="json")
 
-                    tool_results.append({
-                        "type": "tool_result",
-                        "tool_use_id": tool_block.id,
+                    messages.append({
+                        "role": "tool",
+                        "tool_call_id": tool_call.id,
                         "content": result,
                     })
-
-                messages.append({"role": "user", "content": tool_results})
     else:
         st.info("Click **Investigate Customer** to start the agent's analysis.")
