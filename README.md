@@ -1,4 +1,4 @@
-# PawBox Retention Agent
+# Retention Agent
 
 A reason-aware customer retention demo built for Chatathon 2026. The agent investigates at-risk PawBox subscribers, identifies the likely cause of churn, and recommends an appropriate next step instead of automatically offering a discount.
 
