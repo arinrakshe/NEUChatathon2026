@@ -186,7 +186,7 @@
       "support_tickets": [
         {"ticket_id": "TK-701", "date": "2026-03-02", "subject": "Need to pause subscription", "messages": [
           {"from": "customer", "text": "Hi, I need to pause my subscription for now. Buddy has been diagnosed with kidney disease and the vet has put him on a prescription diet. I can't use the regular food anymore. He's 13 and things are getting harder. I've really loved this service for the past year though."},
-          {"from": "support", "text": "I'm so sorry to hear about Buddy. We completely understand. I've paused your subscription. There's no rush at all - you can reactivate anytime. We'll have someone from our team check in with you personally in a couple months just to see how things are going, no pressure and nothing to do on your end. Wishing Buddy the very best."},
+          {"from": "support", "text": "I'm so sorry to hear about Buddy. We completely understand. I've paused your subscription. There's no rush at all - you can reactivate anytime. Wishing Buddy the very best."},
           {"from": "customer", "text": "Thank you for understanding. I might come back if things improve, but honestly I'm not sure what the coming months look like for us."}
         ]}
       ],
