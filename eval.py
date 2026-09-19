@@ -1,9 +1,36 @@
 """Eval harness for the retention agent — runs the personas and checks decisions.
 
 Usage:
-    python eval.py              # run all cases
+    python eval.py              # run all cases once
     python eval.py C002         # run one or more specific cases
+    python eval.py -n 5         # run each case 5 times, report a pass rate
     python eval.py -v           # also print each full agent response
+
+KNOWN LIMITATIONS — read these before trusting a green table:
+
+1. The C002 decline check is partly self-fulfilling. Critical Rule 1 in
+   agent.py now instructs the model to "state plainly that you are declining
+   to offer a discount", which is close to the exact string
+   DISCOUNT_DECLINE_PATTERNS greps for. So a PASS there largely measures
+   prompt compliance, not the agent's judgment. The unforced signal is the
+   CONTRADICTION check: the draft message is not mandated the same way, so
+   what the agent actually offers the customer is still worth measuring.
+
+2. A single run is one sample of a nondeterministic system. C005 has returned
+   both WAIT and ACT on identical input. Any case that has shown flakiness
+   should be run with -n and read as a rate, not a boolean. A 1-run PASS is
+   weak evidence; a 1-run FAIL is worth re-running before acting on.
+
+3. Results are only comparable within one version of agent.py. The system
+   prompt has already been rewritten mid-suite once, which silently mixed two
+   populations into one table. Freeze agent.py before a run you intend to
+   compare against anything.
+
+4. Both C002 checks grep free-form prose, so unseen phrasing reads as a miss.
+   A failing check means "go read the response", not "the agent is wrong". The
+   structured alternative — a `discount_offered: false` field in the agent's
+   output contract — would need a change to agent.py's output format, which is
+   outside this harness's lane.
 """
 
 import re
@@ -37,6 +64,29 @@ DISCOUNT_DECLINE_PATTERNS = [
     r"wouldn't|fails to|only masks|merely)",
 ]
 
+# Discount-shaped language in the *outward* message. Declining a discount in
+# the rationale and then putting one in the draft is the failure this catches —
+# and it's the half of C002 the prompt doesn't script, so it's the half that
+# still measures behaviour rather than compliance.
+DISCOUNT_OFFER_PATTERNS = [
+    r"\b\d{1,2}\s*%",
+    r"\$\s*\d+(?:\.\d{2})?\s*off\b",
+    r"\bdiscount(?:ed|s)?\b",
+    r"\bpromo(?:tion|tional)?\s*code\b",
+    r"\bcoupon\b",
+    r"\bspecial\s+(?:rate|price|pricing|offer|deal)\b",
+    r"\breduced\s+(?:rate|price|pricing)\b",
+    r"\b(?:take|get|save|knock)\s+\d+\s*%",
+    r"\bmoney\s+off\b",
+]
+
+# If one of these sits just before a discount mention, the mention is the agent
+# ruling a discount out rather than offering one.
+NEGATION_CUES = (
+    r"not\b|n't|without|\bno\b|never|rather than|instead of|avoid|stop|"
+    r"free from|rely on|relying on|waiting for"
+)
+
 
 def extract_decision(text: str) -> str:
     """Pull the ACT/WAIT/ESCALATE decision out of the agent's final analysis."""
@@ -60,6 +110,12 @@ def extract_reasoning(text: str) -> str:
     return re.sub(r"\s+", " ", text.strip())[:200] or "(empty response)"
 
 
+def extract_draft_message(text: str) -> str:
+    """The outward-facing message only, or '' if the agent didn't draft one."""
+    m = re.search(r"\**Draft Message:?\**\s*:?\s*", text, re.I)
+    return text[m.end():].strip() if m else ""
+
+
 def check_discount_decline(text: str):
     """Return (declined, matched_phrase) for explicit refusal-to-discount language."""
     flat = re.sub(r"\s+", " ", text)
@@ -68,6 +124,42 @@ def check_discount_decline(text: str):
         if m:
             return True, m.group(0).strip()
     return False, ""
+
+
+def find_discount_offer(draft: str):
+    """Return (offered, phrase_with_context) for a live discount in the draft.
+
+    Mentions preceded by a negation cue are the agent ruling a discount out
+    ("...doesn't rely on waiting for occasional discounts"), not offering one,
+    so they don't count.
+    """
+    flat = re.sub(r"\s+", " ", draft)
+    for pattern in DISCOUNT_OFFER_PATTERNS:
+        for m in re.finditer(pattern, flat, re.I):
+            if re.search(NEGATION_CUES, flat[max(0, m.start() - 60):m.start()], re.I):
+                continue
+            lo, hi = max(0, m.start() - 35), min(len(flat), m.end() + 20)
+            return True, f"...{flat[lo:hi].strip()}..."
+    return False, ""
+
+
+def check_c002(response: str):
+    """Combine the two C002 checks into one verdict.
+
+    PASS          — declined in the prose, nothing discount-shaped in the draft.
+    CONTRADICTION — declined in the prose, but the draft discounts anyway.
+    FAIL          — no explicit decline found at all.
+    """
+    declined, decline_phrase = check_discount_decline(response)
+    offered, offer_phrase = find_discount_offer(extract_draft_message(response))
+
+    if declined and offered:
+        return "CONTRADICTION", f'declined "{decline_phrase}" but draft says {offer_phrase}'
+    if declined:
+        return "PASS", f'matched: "{decline_phrase}"'
+    if offered:
+        return "FAIL", f"no decline language, and draft discounts: {offer_phrase}"
+    return "FAIL", "no explicit refusal-to-discount language found"
 
 
 def truncate(text: str, width: int) -> str:
@@ -90,64 +182,168 @@ def run_with_retry(cid: str, attempts: int = 3):
             time.sleep(delay)
 
 
-def main() -> int:
-    args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    verbose = "-v" in sys.argv or "--verbose" in sys.argv
-    selected = [c.upper() for c in args] or list(CASES)
+def parse_args(argv):
+    """Return (cases, runs, verbose). Raises ValueError on bad input."""
+    cases, runs, verbose = [], 1, False
+    i = 0
+    while i < len(argv):
+        arg = argv[i]
+        if arg in ("-v", "--verbose"):
+            verbose = True
+        elif arg in ("-n", "--runs"):
+            i += 1
+            if i >= len(argv):
+                raise ValueError("-n needs a number, e.g. -n 5")
+            runs = int(argv[i])
+        elif re.fullmatch(r"-n\d+", arg):
+            runs = int(arg[2:])
+        elif arg.startswith("-"):
+            raise ValueError(f"unknown flag: {arg}")
+        else:
+            cases.append(arg.upper())
+        i += 1
 
+    if runs < 1:
+        raise ValueError("-n must be at least 1")
+    return cases, runs, verbose
+
+
+def tally(decisions) -> str:
+    """'WAIT x3, ACT x1' — most frequent first."""
+    counts = {}
+    for d in decisions:
+        counts[d] = counts.get(d, 0) + 1
+    ordered = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
+    return ", ".join(f"{d} x{n}" if n > 1 else d for d, n in ordered)
+
+
+def run_case(cid: str, expected: str, runs: int, verbose: bool):
+    """Run one persona `runs` times and fold the runs into a single row."""
+    decisions, reasonings, c002_verdicts, errors = [], [], [], 0
+
+    for attempt in range(runs):
+        label = f"{cid} ({attempt + 1}/{runs})" if runs > 1 else cid
+        print(f"Running {label} ...", file=sys.stderr, flush=True)
+        try:
+            response = run_with_retry(cid)["final_response"]
+            decisions.append(extract_decision(response))
+            reasonings.append(extract_reasoning(response))
+        except Exception as exc:  # a crashed run is a failed run, not a dead harness
+            response = ""
+            errors += 1
+            decisions.append("ERROR")
+            reasonings.append(f"{type(exc).__name__}: {exc}")
+
+        if cid == "C002" and response:
+            c002_verdicts.append(check_c002(response))
+
+        if verbose and response:
+            header = f"{cid} run {attempt + 1}" if runs > 1 else cid
+            print(f"\n{'-' * 70}\n{header} full response\n{'-' * 70}\n{response}\n")
+
+    row = {
+        "cid": cid,
+        "expected": expected,
+        "observed": tally(decisions),
+        "passes": sum(1 for d in decisions if d == expected),
+        "runs": runs,
+        "errors": errors,
+        # Show the first run that *didn't* match, so a mixed result explains its
+        # failure rather than its success.
+        "reasoning": next((r for d, r in zip(decisions, reasonings) if d != expected), reasonings[0]),
+    }
+    return row, c002_verdicts
+
+
+def status_of(row) -> str:
+    """PASS / FAIL(wrong) / FAIL(error) for one run; a rate for several."""
+    passes, runs, errors = row["passes"], row["runs"], row["errors"]
+    if runs == 1:
+        if passes:
+            return "PASS"
+        return "FAIL(error)" if errors else "FAIL(wrong)"
+    rate = f"{passes}/{runs}"
+    if passes == runs:
+        return rate
+    if passes == 0:
+        return f"{rate} {'ERR' if errors == runs else 'FAIL'}"
+    return f"{rate} FLAKY"
+
+
+def print_table(rows):
+    headers = ("persona", "expected", "observed", "result", "reasoning")
+    widths = (8, 9, 22, 12, 52)
+    print()
+    print("  ".join(h.ljust(w) for h, w in zip(headers, widths)))
+    print("  ".join("-" * w for w in widths))
+    for row in rows:
+        cells = (
+            row["cid"],
+            row["expected"],
+            truncate(row["observed"], widths[2]),
+            status_of(row),
+            truncate(row["reasoning"], widths[4]),
+        )
+        print("  ".join(c.ljust(w) for c, w in zip(cells, widths)))
+
+
+def report(rows, c002_verdicts, runs) -> int:
+    total_runs = sum(r["runs"] for r in rows)
+    total_passes = sum(r["passes"] for r in rows)
+    clean = [r for r in rows if r["passes"] == r["runs"]]
+    flaky = [r for r in rows if 0 < r["passes"] < r["runs"]]
+
+    print(f"\nDecisions: {total_passes}/{total_runs} runs passed, "
+          f"{len(clean)}/{len(rows)} personas clean")
+    if flaky:
+        print("FLAKY (nondeterministic on identical input): "
+              + ", ".join(f"{r['cid']} {r['passes']}/{r['runs']}" for r in flaky))
+
+    failed = len(clean) != len(rows)
+
+    if c002_verdicts:
+        verdicts = [v for v, _ in c002_verdicts]
+        passed = verdicts.count("PASS")
+        print(f"\nC002 discount check: {passed}/{len(verdicts)} passed")
+        for i, (verdict, detail) in enumerate(c002_verdicts, 1):
+            prefix = f"  run {i}: " if len(c002_verdicts) > 1 else "  "
+            print(f"{prefix}{verdict}  ({detail})")
+        if passed != len(verdicts):
+            failed = True
+        if "CONTRADICTION" in verdicts:
+            print("  NOTE: CONTRADICTION means the rationale declined a discount but the draft\n"
+                  "        message offers one anyway. The decline is prompt-scripted; the draft\n"
+                  "        is not. Read the draft before trusting any prompt change that claims\n"
+                  "        to have fixed C002.")
+
+    if runs == 1:
+        print("\nOne sample per case. See KNOWN LIMITATIONS at the top of this file —\n"
+              "re-run anything surprising with -n before acting on it.")
+
+    return 1 if failed else 0
+
+
+def main() -> int:
+    try:
+        args, runs, verbose = parse_args(sys.argv[1:])
+    except ValueError as exc:
+        print(f"{exc}\nUsage: python eval.py [CASE ...] [-n RUNS] [-v]")
+        return 2
+
+    selected = args or list(CASES)
     unknown = [c for c in selected if c not in CASES]
     if unknown:
         print(f"Unknown case(s): {', '.join(unknown)}. Known: {', '.join(CASES)}")
         return 2
 
-    rows = []
-    discount_check = None
-
+    rows, c002_verdicts = [], []
     for cid in selected:
-        expected = CASES[cid]
-        print(f"Running {cid} ...", file=sys.stderr, flush=True)
-        try:
-            result = run_with_retry(cid)
-            response = result["final_response"]
-            actual = extract_decision(response)
-            reasoning = extract_reasoning(response)
-        except Exception as exc:  # a crashed run is a failed case, not a dead harness
-            response = ""
-            actual = "ERROR"
-            reasoning = f"{type(exc).__name__}: {exc}"
+        row, verdicts = run_case(cid, CASES[cid], runs, verbose)
+        rows.append(row)
+        c002_verdicts.extend(verdicts)
 
-        rows.append((cid, expected, actual, actual == expected, reasoning))
-
-        if cid == "C002":
-            discount_check = check_discount_decline(response)
-
-        if verbose and response:
-            print(f"\n{'-' * 70}\n{cid} full response\n{'-' * 70}\n{response}\n")
-
-    # Table
-    headers = ("persona", "expected", "actual", "result", "reasoning")
-    widths = (8, 9, 9, 6, 62)
-    print()
-    print("  ".join(h.ljust(w) for h, w in zip(headers, widths)))
-    print("  ".join("-" * w for w in widths))
-    for cid, expected, actual, ok, reasoning in rows:
-        cells = (cid, expected, actual, "PASS" if ok else "FAIL", truncate(reasoning, widths[4]))
-        print("  ".join(c.ljust(w) for c, w in zip(cells, widths)))
-
-    passed = sum(1 for r in rows if r[3])
-    print(f"\nDecisions: {passed}/{len(rows)} passed")
-
-    # Separate C002 check: did it explicitly decline to discount?
-    extra_failed = False
-    if discount_check is not None:
-        declined, phrase = discount_check
-        if declined:
-            print(f'C002 discount-decline check: PASS  (matched: "{phrase}")')
-        else:
-            print("C002 discount-decline check: FAIL  (no explicit refusal-to-discount language found)")
-            extra_failed = True
-
-    return 0 if passed == len(rows) and not extra_failed else 1
+    print_table(rows)
+    return report(rows, c002_verdicts, runs)
 
 
 if __name__ == "__main__":
