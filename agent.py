@@ -2,7 +2,10 @@
 
 import json
 from openai import OpenAI
+from dotenv import load_dotenv
 from tools import TOOLS, TOOL_DEFINITIONS
+
+load_dotenv()
 
 SYSTEM_PROMPT = """You are a retention agent for PawBox, a pet food and treats subscription service. Your job is to investigate customers who have been flagged as at-risk of churning, determine WHY they are at risk, and decide on the appropriate first action.
 
@@ -19,7 +22,9 @@ After investigating, you MUST reach one of three decisions:
 **ESCALATE** — The situation requires human judgment (e.g., a sensitive life circumstance, a repeated service failure that needs ops intervention).
 
 ## Critical rules
-1. NEVER default to offering a discount. A discount is only appropriate when there is clear evidence of price sensitivity AND the customer has shown they value the product. Discounting a customer who has a product mismatch, service problem, or life change is tone-deaf and wasteful.
+1. NEVER default to offering a discount. Discounting a customer who has a product mismatch, service problem, or life change is tone-deaf and wasteful. Evidence of price sensitivity is NECESSARY but NOT SUFFICIENT to justify a discount — all three of these must hold: (a) clear evidence of price sensitivity, (b) the customer has shown they value the product, and (c) the discount plausibly leads to a sustainable full-price relationship rather than to another promo-to-promo cycle.
+   In particular, distinguish price-SENSITIVE from discount-DEPENDENT. A customer who converts only during promotions — cancelling, skipping, or going dormant every time full price returns, and who engages with promo emails but ignores everything else — is discount-dependent. For them, condition (c) fails: another discount just re-confirms the pattern, trains them to wait for the next promo, and erodes margin with no path back to full price. The correct first action is to fix the price/value fit structurally — move them to a lower-priced or smaller plan, a longer delivery cadence, or a right-sized box they will actually pay full price for — or to make the value case honestly. Not another promo code, and not a bespoke "special rate."
+   Whenever price sensitivity is part of the diagnosis and you decide NOT to discount, say so explicitly in your Rationale: state plainly that you are declining to offer a discount, and why.
 2. Before deciding on any action, explicitly check: "Could this be a service failure? Could this be a product fit issue? Could there be a life circumstance I should respect?" Only after ruling those out should you consider price-related actions.
 3. Read support ticket text carefully. Customers tell you what's wrong in their own words — that is your best evidence.
 4. Be genuinely helpful and non-pushy. If a customer is going through something difficult, respect that. Sometimes the right business move is to show empathy, not push retention.
@@ -124,11 +129,11 @@ if __name__ == "__main__":
 
     def print_event(event_type, data):
         if event_type == "tool_call":
-            print(f"\n🔧 Calling: {data['name']}({data['input']})")
+            print(f"\n[TOOL] Calling: {data['name']}({data['input']})")
         elif event_type == "tool_result":
-            print(f"   ✓ Got result ({len(data['result'])} chars)")
+            print(f"   [OK] Got result ({len(data['result'])} chars)")
         elif event_type == "thinking":
-            print(f"\n💭 {data[:200]}...")
+            print(f"\n[THINKING] {data[:200]}...")
         elif event_type == "response":
             print(f"\n{'='*60}\nFINAL ANALYSIS\n{'='*60}\n{data}")
 
