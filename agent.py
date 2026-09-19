@@ -1,8 +1,20 @@
 """Reason-Aware Retention Agent — core loop using OpenAI tool use."""
 
 import json
+import os
+import re
 from openai import OpenAI
 from tools import TOOLS, TOOL_DEFINITIONS
+
+try:  # optional — lets `python agent.py C001` work straight from a .env file
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+MODEL = "gpt-4o"
+MAX_TURNS = 12          # hard stop so a tool-call loop can't run away
+MAX_TOKENS = 4096
 
 SYSTEM_PROMPT = """You are a retention agent for PawBox, a pet food and treats subscription service. Your job is to investigate customers who have been flagged as at-risk of churning, determine WHY they are at risk, and decide on the appropriate first action.
 
@@ -40,13 +52,68 @@ If your decision is ACT, also draft the customer message under:
 [The actual email/message you would send, in a warm but professional brand voice]
 """
 
+DECISIONS = ("ACT", "WAIT", "ESCALATE")
+CONFIDENCES = ("HIGH", "MEDIUM", "LOW")
 
-def run_agent(customer_id: str, on_event=None):
+
+def _extract_field(text: str, label: str) -> str | None:
+    """Pull a '**Label:** value' field out of the agent's markdown analysis.
+
+    Tolerates the variants the model actually produces: '**Label:** v',
+    '**Label: v**', and a plain 'Label: v'.
+    """
+    pattern = rf"\*{{0,2}}{re.escape(label)}\s*:?\*{{0,2}}\s*:?\s*(.+)"
+    for line in text.splitlines():
+        match = re.match(pattern, line.strip(), re.IGNORECASE)
+        if match:
+            return match.group(1).strip().strip("*").strip() or None
+    return None
+
+
+def _extract_enum(text: str, label: str, allowed: tuple[str, ...]) -> str | None:
+    """Extract a field whose value must be one of `allowed` (e.g. the decision)."""
+    value = _extract_field(text, label)
+    if value:
+        upper = value.upper()
+        for option in allowed:
+            if option in upper:
+                return option
+    # Fall back to a document-wide scan — the model sometimes bolds the value
+    # on its own line instead of inline after the label.
+    for option in allowed:
+        if re.search(rf"\*\*{label}\s*:?\*\*\s*\n+\s*\*{{0,2}}{option}", text, re.IGNORECASE):
+            return option
+    return None
+
+
+def parse_analysis(final_text: str) -> dict:
+    """Parse the agent's final markdown into the fields the UI renders.
+
+    This is the output contract the Streamlit app consumes — the UI should read
+    these keys rather than re-parsing the markdown itself.
+    """
+    return {
+        "decision": _extract_enum(final_text, "Decision", DECISIONS),
+        "confidence": _extract_enum(final_text, "Confidence", CONFIDENCES),
+        "churn_cause": _extract_field(final_text, "Churn Cause"),
+    }
+
+
+def run_agent(customer_id: str, on_event=None, max_turns: int = MAX_TURNS) -> dict:
     """Run the retention agent for a given customer.
 
     on_event: optional callback(event_type, data) for streaming UI updates.
-    Event types: 'thinking', 'tool_call', 'tool_result', 'response'
+    Event types: 'thinking', 'tool_call', 'tool_result', 'response', 'error'
+
+    Returns the output contract described in parse_analysis(), plus the tool
+    trace, turn count, and token usage.
     """
+    if not os.getenv("OPENAI_API_KEY"):
+        raise RuntimeError(
+            "OPENAI_API_KEY is not set. Add it to .env (and `pip install python-dotenv`) "
+            "or export it in your shell before running the agent."
+        )
+
     client = OpenAI()
 
     def emit(event_type, data):
@@ -62,15 +129,24 @@ def run_agent(customer_id: str, on_event=None):
     ]
 
     tool_call_log = []
+    usage = {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
+    turns = 0
 
-    # Agent loop — keep going until the model stops calling tools
-    while True:
+    # Agent loop — keep going until the model stops calling tools, or we hit the cap
+    while turns < max_turns:
+        turns += 1
+
         response = client.chat.completions.create(
-            model="gpt-4o",
-            max_tokens=4096,
+            model=MODEL,
+            max_tokens=MAX_TOKENS,
             tools=TOOL_DEFINITIONS,
             messages=messages,
         )
+
+        if response.usage:
+            usage["prompt_tokens"] += response.usage.prompt_tokens
+            usage["completion_tokens"] += response.usage.completion_tokens
+            usage["total_tokens"] += response.usage.total_tokens
 
         message = response.choices[0].message
 
@@ -83,32 +159,56 @@ def run_agent(customer_id: str, on_event=None):
             final_text = message.content or ""
             emit("response", final_text)
             return {
+                "customer_id": customer_id,
                 "final_response": final_text,
                 "tool_calls": tool_call_log,
+                "turns": turns,
+                "usage": usage,
+                "stopped_early": False,
+                **parse_analysis(final_text),
             }
 
         # Append the assistant message (with tool calls) to history
-        messages.append(message)
+        messages.append(message.model_dump(exclude_none=True))
 
-        # Execute each tool call
+        # Execute each tool call. Every tool_call MUST get a matching tool
+        # message back — a missing one makes the next request invalid.
         for tool_call in message.tool_calls:
             tool_name = tool_call.function.name
-            tool_input = json.loads(tool_call.function.arguments)
+            error = None
+
+            try:
+                tool_input = json.loads(tool_call.function.arguments or "{}")
+            except json.JSONDecodeError as exc:
+                tool_input = {}
+                error = f"Could not parse arguments: {exc}"
+
             emit("tool_call", {"name": tool_name, "input": tool_input})
 
-            # Execute the tool
-            fn = TOOLS.get(tool_name)
-            if fn:
-                result = fn(**tool_input)
+            if error:
+                result = f"Error: {error}"
             else:
-                result = f"Unknown tool: {tool_name}"
+                fn = TOOLS.get(tool_name)
+                if fn is None:
+                    error = f"Unknown tool: {tool_name}"
+                    result = f"Error: {error}. Available tools: {', '.join(TOOLS)}"
+                else:
+                    try:
+                        result = fn(**tool_input)
+                    except Exception as exc:  # feed the failure back so the model can recover
+                        error = f"{type(exc).__name__}: {exc}"
+                        result = f"Error calling {tool_name}: {error}"
+
+            if error:
+                emit("error", {"name": tool_name, "error": error})
 
             tool_call_log.append({
                 "tool": tool_name,
                 "input": tool_input,
                 "result": result,
+                "error": error,
             })
-            emit("tool_result", {"name": tool_name, "result": result})
+            emit("tool_result", {"name": tool_name, "result": result, "error": error})
 
             # Append tool result to messages
             messages.append({
@@ -117,19 +217,55 @@ def run_agent(customer_id: str, on_event=None):
                 "content": result,
             })
 
+    # Hit the turn cap without the model settling on an answer
+    emit("error", {"error": f"Stopped after {max_turns} turns without a final analysis."})
+    return {
+        "customer_id": customer_id,
+        "final_response": "",
+        "tool_calls": tool_call_log,
+        "turns": turns,
+        "usage": usage,
+        "stopped_early": True,
+        "decision": None,
+        "confidence": None,
+        "churn_cause": None,
+    }
+
 
 if __name__ == "__main__":
     import sys
-    cid = sys.argv[1] if len(sys.argv) > 1 else "C001"
+
+    args = sys.argv[1:]
+    if args and args[0].lower() == "all":
+        customer_ids = ["C001", "C002", "C003", "C004", "C005"]
+    else:
+        customer_ids = args or ["C001"]
 
     def print_event(event_type, data):
         if event_type == "tool_call":
             print(f"\n🔧 Calling: {data['name']}({data['input']})")
         elif event_type == "tool_result":
-            print(f"   ✓ Got result ({len(data['result'])} chars)")
+            flag = "✗" if data.get("error") else "✓"
+            print(f"   {flag} Got result ({len(data['result'])} chars)")
         elif event_type == "thinking":
             print(f"\n💭 {data[:200]}...")
+        elif event_type == "error":
+            print(f"\n⚠️  {data.get('error')}")
         elif event_type == "response":
             print(f"\n{'='*60}\nFINAL ANALYSIS\n{'='*60}\n{data}")
 
-    result = run_agent(cid, on_event=print_event)
+    summary = []
+    for cid in customer_ids:
+        print(f"\n\n{'#'*60}\n# {cid}\n{'#'*60}")
+        result = run_agent(cid, on_event=print_event)
+        summary.append(result)
+        print(
+            f"\n→ decision={result['decision']} confidence={result['confidence']} "
+            f"turns={result['turns']} tools={len(result['tool_calls'])} "
+            f"tokens={result['usage']['total_tokens']}"
+        )
+
+    if len(summary) > 1:
+        print(f"\n\n{'='*60}\nSUMMARY\n{'='*60}")
+        for r in summary:
+            print(f"{r['customer_id']}: {r['decision'] or 'NO DECISION':10} ({r['confidence'] or '—'}) — {r['churn_cause'] or ''}")
