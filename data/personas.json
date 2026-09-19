@@ -1,0 +1,238 @@
+{
+  "customers": {
+    "C001": {
+      "name": "Sarah Mitchell",
+      "pet_name": "Luna",
+      "pet_type": "Dog",
+      "pet_breed": "Golden Retriever",
+      "pet_age_months": 14,
+      "plan": "Premium Box - Large Breed",
+      "monthly_price": 44.99,
+      "member_since": "2025-11-01",
+      "status": "active",
+      "churn_scenario": "product_mismatch",
+      "order_history": [
+        {"order_id": "ORD-1001", "date": "2025-11-05", "items": ["Chicken & Rice Kibble (Large)", "Beef Bully Sticks", "Plush Squeaky Toy"], "status": "delivered"},
+        {"order_id": "ORD-1002", "date": "2025-12-05", "items": ["Chicken & Rice Kibble (Large)", "Salmon Jerky Treats", "Rope Tug Toy"], "status": "delivered"},
+        {"order_id": "ORD-1003", "date": "2026-01-05", "items": ["Chicken & Rice Kibble (Large)", "Peanut Butter Biscuits", "Tennis Ball 3-Pack"], "status": "delivered"},
+        {"order_id": "ORD-1004", "date": "2026-02-05", "items": ["Chicken & Rice Kibble (Large)", "Sweet Potato Chews", "Plush Bone Toy"], "status": "delivered"},
+        {"order_id": "ORD-1005", "date": "2026-03-05", "items": ["Chicken & Rice Kibble (Large)", "Turkey Jerky Strips", "Fetch Ball"], "status": "delivered"},
+        {"order_id": "ORD-1006", "date": "2026-04-05", "items": ["Chicken & Rice Kibble (Large)", "Duck Bites", "Squeaky Donut"], "status": "delivered"}
+      ],
+      "email_engagement": [
+        {"date": "2025-11-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-12-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2026-01-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2026-02-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-03-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-04-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-04-15", "type": "promo_20_percent_off", "opened": false, "clicked": false}
+      ],
+      "support_tickets": [
+        {"ticket_id": "TK-301", "date": "2026-02-08", "subject": "Luna won't eat the kibble", "messages": [
+          {"from": "customer", "text": "Hi, Luna has been refusing to eat the Chicken & Rice Kibble for the past few weeks. She sniffs it and walks away. She used to eat it fine but now she just won't touch it. Is there a different formula we can try?"},
+          {"from": "support", "text": "I'm sorry to hear that! Sometimes dogs develop sensitivities or preferences. I'd recommend trying our Salmon & Sweet Potato formula. Would you like me to swap your next box?"},
+          {"from": "customer", "text": "Sure, let's try that."}
+        ]},
+        {"ticket_id": "TK-302", "date": "2026-03-12", "subject": "Still having food issues", "messages": [
+          {"from": "customer", "text": "The salmon formula didn't work either. Luna barely touched it. I've been buying food from the pet store instead. I'm not sure this subscription is working for us anymore. She also destroys the toys within a day - they're too small for her honestly."},
+          {"from": "support", "text": "I understand your frustration. We do have a sensitive stomach line and can also look into our XL toy options. Would you like me to connect you with our pet nutrition specialist?"},
+          {"from": "customer", "text": "Maybe. Let me think about it."}
+        ]}
+      ],
+      "subscription_events": [
+        {"date": "2025-11-01", "event": "subscribed", "plan": "Premium Box - Large Breed"},
+        {"date": "2026-02-10", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-04-20", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-05-01", "event": "next_renewal_due"}
+      ]
+    },
+
+    "C002": {
+      "name": "Marcus Rivera",
+      "pet_name": "Biscuit",
+      "pet_type": "Dog",
+      "pet_breed": "French Bulldog",
+      "pet_age_months": 36,
+      "plan": "Standard Box - Small Breed",
+      "monthly_price": 34.99,
+      "member_since": "2025-06-01",
+      "status": "active",
+      "churn_scenario": "price_sensitive_no_discount",
+      "order_history": [
+        {"order_id": "ORD-2001", "date": "2025-06-05", "items": ["Lamb & Brown Rice (Small)", "Mini Dental Chews", "Small Plush Toy"], "status": "delivered"},
+        {"order_id": "ORD-2002", "date": "2025-07-05", "items": ["Lamb & Brown Rice (Small)", "Chicken Training Treats", "Squeaky Ball"], "status": "delivered"},
+        {"order_id": "ORD-2003", "date": "2025-09-05", "items": ["Lamb & Brown Rice (Small)", "Beef Jerky Minis", "Chew Ring"], "status": "delivered", "note": "Skipped August, resubscribed with 20% off promo"},
+        {"order_id": "ORD-2004", "date": "2025-12-05", "items": ["Holiday Box - Small Breed"], "status": "delivered", "note": "Holiday 30% off promo"},
+        {"order_id": "ORD-2005", "date": "2026-03-05", "items": ["Lamb & Brown Rice (Small)", "Spring Treats Bundle", "Rope Toy"], "status": "delivered", "note": "Spring sale 25% off"}
+      ],
+      "email_engagement": [
+        {"date": "2025-06-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2025-07-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2025-08-15", "type": "promo_20_percent_off", "opened": true, "clicked": true},
+        {"date": "2025-09-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2025-11-20", "type": "promo_holiday_30_off", "opened": true, "clicked": true},
+        {"date": "2025-12-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-02-20", "type": "promo_spring_25_off", "opened": true, "clicked": true},
+        {"date": "2026-03-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-04-10", "type": "monthly_newsletter", "opened": false, "clicked": false}
+      ],
+      "support_tickets": [],
+      "subscription_events": [
+        {"date": "2025-06-01", "event": "subscribed", "plan": "Standard Box - Small Breed"},
+        {"date": "2025-08-01", "event": "cancelled", "reason": "too_expensive"},
+        {"date": "2025-08-16", "event": "resubscribed", "note": "Used 20% off promo code"},
+        {"date": "2025-10-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2025-11-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2025-11-21", "event": "resubscribed", "note": "Holiday 30% off promo"},
+        {"date": "2026-01-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-02-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-02-21", "event": "resubscribed", "note": "Spring sale 25% off"},
+        {"date": "2026-04-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-05-01", "event": "next_renewal_due"}
+      ]
+    },
+
+    "C003": {
+      "name": "Jessica Tran",
+      "pet_name": "Mochi",
+      "pet_type": "Cat",
+      "pet_breed": "Ragdoll",
+      "pet_age_months": 24,
+      "plan": "Cat Essentials Box",
+      "monthly_price": 29.99,
+      "member_since": "2025-09-01",
+      "status": "active",
+      "churn_scenario": "service_failure",
+      "order_history": [
+        {"order_id": "ORD-3001", "date": "2025-09-05", "items": ["Indoor Cat Dry Food", "Tuna Treats", "Feather Wand Toy"], "status": "delivered"},
+        {"order_id": "ORD-3002", "date": "2025-10-05", "items": ["Indoor Cat Dry Food", "Chicken Lickable Treats", "Crinkle Ball Set"], "status": "delivered"},
+        {"order_id": "ORD-3003", "date": "2025-11-05", "items": ["Indoor Cat Dry Food", "Salmon Crunchy Treats", "Catnip Mouse"], "status": "delivered"},
+        {"order_id": "ORD-3004", "date": "2025-12-05", "items": ["Indoor Cat Dry Food", "Holiday Treat Variety Pack", "Jingle Bell Toy"], "status": "delivered"},
+        {"order_id": "ORD-3005", "date": "2026-01-05", "items": ["Indoor Cat Dry Food", "Freeze-Dried Chicken Treats", "Laser Pointer"], "status": "delivered"},
+        {"order_id": "ORD-3006", "date": "2026-02-05", "items": ["Indoor Cat Dry Food", "Tuna Crunchy Bites", "Spring Toy"], "status": "delivered_damaged", "damage_note": "Box arrived crushed, food bag torn open"},
+        {"order_id": "ORD-3007", "date": "2026-03-05", "items": ["Indoor Cat Dry Food", "Shrimp Treats", "Puzzle Feeder"], "status": "delivered_late", "delay_note": "Arrived 9 days late, delivered March 14"},
+        {"order_id": "ORD-3008", "date": "2026-04-05", "items": ["Indoor Cat Dry Food", "Chicken & Pumpkin Treats", "Scratch Pad"], "status": "delivered_damaged", "damage_note": "Treats package open and stale on arrival, scratch pad broken in half"}
+      ],
+      "email_engagement": [
+        {"date": "2025-09-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-10-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-11-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2025-12-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2026-01-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2026-02-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2026-03-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-04-10", "type": "monthly_newsletter", "opened": false, "clicked": false}
+      ],
+      "support_tickets": [
+        {"ticket_id": "TK-501", "date": "2026-02-08", "subject": "Damaged box", "messages": [
+          {"from": "customer", "text": "My February box arrived completely crushed. The food bag was ripped open and kibble was everywhere. This is really disappointing - I've been a loyal customer for months."},
+          {"from": "support", "text": "I'm so sorry about that! We'll send a replacement box right away at no charge. You should receive it within 3-5 business days."},
+          {"from": "customer", "text": "Thank you, I appreciate the quick response."}
+        ]},
+        {"ticket_id": "TK-502", "date": "2026-03-14", "subject": "Where is my March box??", "messages": [
+          {"from": "customer", "text": "It's March 14th and I still don't have my March box. Tracking says it's been sitting at a facility for a week. This is the second month in a row with issues."},
+          {"from": "support", "text": "I apologize for the delay. It looks like there was a shipping carrier issue. Your box is now in transit and should arrive by March 16th. We've added a $5 credit to your account."},
+          {"from": "customer", "text": "A $5 credit doesn't really make up for not having cat food for my cat for two weeks. I had to buy emergency food at the store."}
+        ]},
+        {"ticket_id": "TK-503", "date": "2026-04-07", "subject": "ANOTHER damaged shipment", "messages": [
+          {"from": "customer", "text": "I honestly can't believe this. Third month in a row with a problem. The treats bag was open and stale, and the scratch pad was snapped in half. At this point I'm questioning why I'm still subscribed. I love the product selection but the shipping quality is unacceptable."},
+          {"from": "support", "text": "I completely understand your frustration and I'm escalating this to our shipping team. We're sending a replacement and adding a $10 credit to your account. I want to assure you we take this seriously."},
+          {"from": "customer", "text": "Credits don't fix the problem. Fix the shipping."}
+        ]}
+      ],
+      "subscription_events": [
+        {"date": "2025-09-01", "event": "subscribed", "plan": "Cat Essentials Box"},
+        {"date": "2026-04-15", "event": "viewed_cancellation_page"},
+        {"date": "2026-05-01", "event": "next_renewal_due"}
+      ]
+    },
+
+    "C004": {
+      "name": "David Park",
+      "pet_name": "Buddy",
+      "pet_type": "Dog",
+      "pet_breed": "Labrador Retriever",
+      "pet_age_months": 156,
+      "plan": "Senior Dog Wellness Box",
+      "monthly_price": 49.99,
+      "member_since": "2025-03-01",
+      "status": "active",
+      "churn_scenario": "life_change",
+      "order_history": [
+        {"order_id": "ORD-4001", "date": "2025-03-05", "items": ["Senior Joint-Support Kibble", "Soft Dental Chews", "Gentle Plush Toy"], "status": "delivered"},
+        {"order_id": "ORD-4002", "date": "2025-04-05", "items": ["Senior Joint-Support Kibble", "Glucosamine Treats", "Orthopedic Chew Mat"], "status": "delivered"},
+        {"order_id": "ORD-4003", "date": "2025-05-05", "items": ["Senior Joint-Support Kibble", "Calming Treats", "Snuggle Blanket"], "status": "delivered"},
+        {"order_id": "ORD-4004", "date": "2025-06-05", "items": ["Senior Joint-Support Kibble", "Pumpkin Digestive Biscuits", "Slow Feeder Bowl"], "status": "delivered"},
+        {"order_id": "ORD-4005", "date": "2025-07-05", "items": ["Senior Joint-Support Kibble", "Probiotic Soft Chews", "Cooling Mat"], "status": "delivered"},
+        {"order_id": "ORD-4006", "date": "2025-08-05", "items": ["Senior Joint-Support Kibble", "Hip & Joint Supplements", "Memory Foam Pillow Toy"], "status": "delivered"},
+        {"order_id": "ORD-4007", "date": "2025-09-05", "items": ["Senior Joint-Support Kibble", "Calming Supplements", "Gentle Rope Toy"], "status": "delivered"},
+        {"order_id": "ORD-4008", "date": "2025-10-05", "items": ["Senior Joint-Support Kibble", "Omega-3 Fish Oil Chews", "Comfort Toy"], "status": "delivered"},
+        {"order_id": "ORD-4009", "date": "2025-11-05", "items": ["Senior Joint-Support Kibble", "Turkey & Pumpkin Soft Treats", "Heated Plush Toy"], "status": "delivered"},
+        {"order_id": "ORD-4010", "date": "2025-12-05", "items": ["Senior Joint-Support Kibble", "Holiday Soft Treat Box", "Cozy Blanket"], "status": "delivered"},
+        {"order_id": "ORD-4011", "date": "2026-01-05", "items": ["Senior Joint-Support Kibble", "Digestive Care Treats", "Indoor Fetch Toy"], "status": "delivered"},
+        {"order_id": "ORD-4012", "date": "2026-02-05", "items": ["Senior Joint-Support Kibble", "Joint Care Chews", "Plush Heart Toy"], "status": "delivered"}
+      ],
+      "email_engagement": [
+        {"date": "2025-03-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-06-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-09-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2025-12-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2026-01-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2026-02-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2026-03-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-04-10", "type": "monthly_newsletter", "opened": false, "clicked": false}
+      ],
+      "support_tickets": [
+        {"ticket_id": "TK-701", "date": "2026-03-02", "subject": "Need to pause subscription", "messages": [
+          {"from": "customer", "text": "Hi, I need to pause my subscription for now. Buddy has been diagnosed with kidney disease and the vet has put him on a prescription diet. I can't use the regular food anymore. He's 13 and things are getting harder. I've really loved this service for the past year though."},
+          {"from": "support", "text": "I'm so sorry to hear about Buddy. We completely understand. I've paused your subscription. There's no rush at all - you can reactivate anytime. Wishing Buddy the very best."},
+          {"from": "customer", "text": "Thank you for understanding. I might come back if things improve, but honestly I'm not sure what the coming months look like for us."}
+        ]}
+      ],
+      "subscription_events": [
+        {"date": "2025-03-01", "event": "subscribed", "plan": "Senior Dog Wellness Box"},
+        {"date": "2026-03-03", "event": "paused", "reason": "customer_request"},
+        {"date": "2026-05-01", "event": "pause_expires_renewal_due"}
+      ]
+    },
+
+    "C005": {
+      "name": "Emily Larson",
+      "pet_name": "Pepper",
+      "pet_type": "Dog",
+      "pet_breed": "Border Collie",
+      "pet_age_months": 30,
+      "plan": "Active Dog Box",
+      "monthly_price": 39.99,
+      "member_since": "2025-08-01",
+      "status": "active",
+      "churn_scenario": "false_alarm",
+      "order_history": [
+        {"order_id": "ORD-5001", "date": "2025-08-05", "items": ["High-Energy Chicken Kibble", "Training Treat Pouch", "Durable Chew Toy"], "status": "delivered"},
+        {"order_id": "ORD-5002", "date": "2025-09-05", "items": ["High-Energy Chicken Kibble", "Agility Reward Treats", "Frisbee"], "status": "delivered"},
+        {"order_id": "ORD-5003", "date": "2025-10-05", "items": ["High-Energy Chicken Kibble", "Peanut Butter Crunchers", "Tug Rope XL"], "status": "delivered"},
+        {"order_id": "ORD-5004", "date": "2025-11-05", "items": ["High-Energy Chicken Kibble", "Venison Training Bites", "Puzzle Ball"], "status": "delivered"},
+        {"order_id": "ORD-5005", "date": "2025-12-05", "items": ["High-Energy Chicken Kibble", "Holiday Adventure Pack", "Snow Fetch Toy"], "status": "delivered"},
+        {"order_id": "ORD-5006", "date": "2026-01-05", "items": ["High-Energy Chicken Kibble", "Salmon Omega Treats", "Chew Antler"], "status": "delivered"},
+        {"order_id": "ORD-5007", "date": "2026-02-05", "items": ["High-Energy Chicken Kibble", "Blueberry Training Treats", "Spring Frisbee"], "status": "delivered"},
+        {"order_id": "ORD-5008", "date": "2026-03-05", "items": ["High-Energy Chicken Kibble", "Duck Jerky Strips", "Outdoor Ball Launcher"], "status": "delivered"}
+      ],
+      "email_engagement": [
+        {"date": "2025-08-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-09-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-10-10", "type": "monthly_newsletter", "opened": true, "clicked": false},
+        {"date": "2025-11-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2025-12-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
+        {"date": "2026-01-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-02-10", "type": "monthly_newsletter", "opened": false, "clicked": false},
+        {"date": "2026-03-10", "type": "monthly_newsletter", "opened": false, "clicked": false}
+      ],
+      "support_tickets": [],
+      "subscription_events": [
+        {"date": "2025-08-01", "event": "subscribed", "plan": "Active Dog Box"},
+        {"date": "2026-04-05", "event": "next_renewal_due"}
+      ]
+    }
+  }
+}
