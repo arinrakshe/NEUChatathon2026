@@ -16,8 +16,8 @@
         {"order_id": "ORD-1002", "date": "2025-12-05", "items": ["Chicken & Rice Kibble (Large)", "Salmon Jerky Treats", "Rope Tug Toy"], "status": "delivered"},
         {"order_id": "ORD-1003", "date": "2026-01-05", "items": ["Chicken & Rice Kibble (Large)", "Peanut Butter Biscuits", "Tennis Ball 3-Pack"], "status": "delivered"},
         {"order_id": "ORD-1004", "date": "2026-02-05", "items": ["Chicken & Rice Kibble (Large)", "Sweet Potato Chews", "Plush Bone Toy"], "status": "delivered"},
-        {"order_id": "ORD-1005", "date": "2026-03-05", "items": ["Chicken & Rice Kibble (Large)", "Turkey Jerky Strips", "Fetch Ball"], "status": "delivered"},
-        {"order_id": "ORD-1006", "date": "2026-04-05", "items": ["Chicken & Rice Kibble (Large)", "Duck Bites", "Squeaky Donut"], "status": "delivered"}
+        {"order_id": "ORD-1005", "date": "2026-03-05", "items": ["Salmon & Sweet Potato Formula (Large)", "Turkey Jerky Strips", "Fetch Ball"], "status": "delivered", "note": "Formula swapped to salmon per TK-301"},
+        {"order_id": "ORD-1006", "date": "2026-04-05", "items": ["Salmon & Sweet Potato Formula (Large)", "Duck Bites", "Squeaky Donut"], "status": "delivered"}
       ],
       "email_engagement": [
         {"date": "2025-11-10", "type": "monthly_newsletter", "opened": true, "clicked": true},
@@ -82,13 +82,13 @@
         {"date": "2025-06-01", "event": "subscribed", "plan": "Standard Box - Small Breed"},
         {"date": "2025-08-01", "event": "cancelled", "reason": "too_expensive"},
         {"date": "2025-08-16", "event": "resubscribed", "note": "Used 20% off promo code"},
-        {"date": "2025-10-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2025-10-01", "event": "skipped_month", "reason": "still had food left over"},
         {"date": "2025-11-01", "event": "skipped_month", "reason": "customer_request"},
         {"date": "2025-11-21", "event": "resubscribed", "note": "Holiday 30% off promo"},
         {"date": "2026-01-01", "event": "skipped_month", "reason": "customer_request"},
         {"date": "2026-02-01", "event": "skipped_month", "reason": "customer_request"},
         {"date": "2026-02-21", "event": "resubscribed", "note": "Spring sale 25% off"},
-        {"date": "2026-04-01", "event": "skipped_month", "reason": "customer_request"},
+        {"date": "2026-04-01", "event": "skipped_month", "reason": "still had food left over, Biscuit is on the small side and one box lasts 6+ weeks"},
         {"date": "2026-05-01", "event": "next_renewal_due"}
       ]
     },
@@ -186,7 +186,7 @@
       "support_tickets": [
         {"ticket_id": "TK-701", "date": "2026-03-02", "subject": "Need to pause subscription", "messages": [
           {"from": "customer", "text": "Hi, I need to pause my subscription for now. Buddy has been diagnosed with kidney disease and the vet has put him on a prescription diet. I can't use the regular food anymore. He's 13 and things are getting harder. I've really loved this service for the past year though."},
-          {"from": "support", "text": "I'm so sorry to hear about Buddy. We completely understand. I've paused your subscription. There's no rush at all - you can reactivate anytime. Wishing Buddy the very best."},
+          {"from": "support", "text": "I'm so sorry to hear about Buddy. We completely understand. I've paused your subscription. There's no rush at all - you can reactivate anytime. We'll have someone from our team check in with you personally in a couple months just to see how things are going, no pressure and nothing to do on your end. Wishing Buddy the very best."},
           {"from": "customer", "text": "Thank you for understanding. I might come back if things improve, but honestly I'm not sure what the coming months look like for us."}
         ]}
       ],
@@ -214,7 +214,7 @@
         {"order_id": "ORD-5003", "date": "2025-10-05", "items": ["High-Energy Chicken Kibble", "Peanut Butter Crunchers", "Tug Rope XL"], "status": "delivered"},
         {"order_id": "ORD-5004", "date": "2025-11-05", "items": ["High-Energy Chicken Kibble", "Venison Training Bites", "Puzzle Ball"], "status": "delivered"},
         {"order_id": "ORD-5005", "date": "2025-12-05", "items": ["High-Energy Chicken Kibble", "Holiday Adventure Pack", "Snow Fetch Toy"], "status": "delivered"},
-        {"order_id": "ORD-5006", "date": "2026-01-05", "items": ["High-Energy Chicken Kibble", "Salmon Omega Treats", "Chew Antler"], "status": "delivered"},
+        {"order_id": "ORD-5006", "date": "2026-01-05", "items": ["High-Energy Chicken Kibble", "Salmon Omega Treats", "Chew Antler"], "status": "delivered", "note": "Shipped to new address on file, delivered on time"},
         {"order_id": "ORD-5007", "date": "2026-02-05", "items": ["High-Energy Chicken Kibble", "Blueberry Training Treats", "Spring Frisbee"], "status": "delivered"},
         {"order_id": "ORD-5008", "date": "2026-03-05", "items": ["High-Energy Chicken Kibble", "Duck Jerky Strips", "Outdoor Ball Launcher"], "status": "delivered"}
       ],
@@ -231,6 +231,7 @@
       "support_tickets": [],
       "subscription_events": [
         {"date": "2025-08-01", "event": "subscribed", "plan": "Active Dog Box"},
+        {"date": "2025-12-28", "event": "updated_shipping_address", "note": "Moved apartments, updated address in account settings"},
         {"date": "2026-04-05", "event": "next_renewal_due"}
       ]
     }
