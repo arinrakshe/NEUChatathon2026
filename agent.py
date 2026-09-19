@@ -28,7 +28,9 @@ After investigating, you MUST reach one of three decisions:
 
 **ACT** — You have enough evidence to take a specific, helpful first action. Draft the actual message you would send.
 **WAIT** — The signals are ambiguous. Specify what you'd monitor and for how long before re-evaluating.
-**ESCALATE** — The situation requires human judgment (e.g., a sensitive life circumstance, a repeated service failure that needs ops intervention).
+**ESCALATE** — A human has to make a judgement call you should not make on the company's behalf: a sensitive life circumstance (bereavement, illness, financial hardship), or a repeated service failure that needs ops intervention or compensation.
+ESCALATE is NOT the label for "this case needs a specialist." Booking a nutrition consult, a product-fit review, or a plan change is a first action you own — that is ACT, and the referral is the action. A product fit problem is not an escalation no matter how many formulas have failed, and neither is a case simply being important, frustrating, or close to cancellation.
+Tiebreaker: if you can write the customer message yourself and sending it is the right next step, the decision is ACT — even when that message hands off to a specialist. Choose ESCALATE only when a human must decide something BEFORE any message goes out. If you have drafted a competent outward message and still labelled it ESCALATE, the label is wrong.
 
 ## Critical rules
 1. NEVER default to offering a discount. Discounting a customer who has a product mismatch, service problem, or life change is tone-deaf and wasteful. Evidence of price sensitivity is NECESSARY but NOT SUFFICIENT to justify a discount — all three of these must hold: (a) clear evidence of price sensitivity, (b) the customer has shown they value the product, and (c) the discount plausibly leads to a sustainable full-price relationship rather than to another promo-to-promo cycle.
@@ -48,6 +50,7 @@ After your investigation, provide your final analysis in this structure:
 **Decision:** [ACT / WAIT / ESCALATE]
 **Rationale:** [why this decision and not the alternatives]
 **Action:** [if ACT: the specific action. If WAIT: what to monitor. If ESCALATE: who and why.]
+**Discount Offered:** [YES / NO — YES only if your action includes a price reduction, promo code, coupon, or bespoke rate on the CURRENT plan. Moving the customer to a genuinely different, lower-priced plan or cadence is NOT a discount; answer NO. Answer for every customer, including ones where price never came up.]
 
 If your decision is ACT, also draft the customer message under:
 **Draft Message:**
@@ -56,6 +59,7 @@ If your decision is ACT, also draft the customer message under:
 
 DECISIONS = ("ACT", "WAIT", "ESCALATE")
 CONFIDENCES = ("HIGH", "MEDIUM", "LOW")
+DISCOUNT_ANSWERS = ("YES", "NO")
 
 
 def _extract_field(text: str, label: str) -> str | None:
@@ -88,6 +92,23 @@ def _extract_enum(text: str, label: str, allowed: tuple[str, ...]) -> str | None
     return None
 
 
+def _extract_yes_no(text: str, label: str) -> str | None:
+    """Extract a YES/NO field, anchoring on the leading token.
+
+    Deliberately not _extract_enum: these answers carry a trailing explanation
+    ("NO - a smaller plan is not a discount") that can contain the opposite
+    word, and a substring scan would read that as YES.
+    """
+    value = _extract_field(text, label)
+    if not value:
+        return None
+    upper = value.upper().lstrip("*[( ").strip()
+    for option in DISCOUNT_ANSWERS:
+        if upper.startswith(option):
+            return option
+    return None
+
+
 def parse_analysis(final_text: str) -> dict:
     """Parse the agent's final markdown into the fields the UI renders.
 
@@ -98,6 +119,7 @@ def parse_analysis(final_text: str) -> dict:
         "decision": _extract_enum(final_text, "Decision", DECISIONS),
         "confidence": _extract_enum(final_text, "Confidence", CONFIDENCES),
         "churn_cause": _extract_field(final_text, "Churn Cause"),
+        "discount_offered": _extract_yes_no(final_text, "Discount Offered"),
     }
 
 
@@ -152,8 +174,10 @@ def run_agent(customer_id: str, on_event=None, max_turns: int = MAX_TURNS) -> di
 
         message = response.choices[0].message
 
-        # If there's text content, emit it
-        if message.content:
+        # Intermediate reasoning only. On the final turn there are no tool
+        # calls and the same string goes out as "response" below — emitting
+        # both made `python agent.py C001` print the analysis twice.
+        if message.content and message.tool_calls:
             emit("thinking", message.content)
 
         # If no tool calls, we're done
@@ -231,6 +255,7 @@ def run_agent(customer_id: str, on_event=None, max_turns: int = MAX_TURNS) -> di
         "decision": None,
         "confidence": None,
         "churn_cause": None,
+        "discount_offered": None,
     }
 
 
