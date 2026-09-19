@@ -1,3 +1,9 @@
 __pycache__/
 *.pyc
 .env
+
+# Local-only pitch materials - not for the repo
+PITCH.md
+DEMO_SCRIPT.md
+*_verbose.txt
+demo_c0*.txt
